@@ -6,31 +6,30 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
+import './Modal.scss';
 
 import { TimePicker, DatePicker } from '@material-ui/pickers';
-
-enum ModalMode {
-  'edit',
-  'create',
-}
+import ModalMode from '../interfaces/ModalMode';
 
 interface ModalProps {
   onCloseModal: () => void;
-  onSuccessModal: () => void;
+  onSuccess: () => void;
+  onDelete: () => void;
   handleChangeModal: (value: any, name: string) => void;
   showModal: boolean;
   mode?: ModalMode;
   title?: string;
-  startTime?: string;
-  date?: string;
-  endTime?: string;
-  color?: string;
+  startTime: Date | string;
+  date: Date | string;
+  endTime: Date | string;
+  color: string;
 }
 
 const Modal: React.SFC<ModalProps> = ({
   showModal,
   onCloseModal,
-  onSuccessModal,
+  onDelete,
+  onSuccess,
   mode,
   title,
   startTime,
@@ -41,7 +40,9 @@ const Modal: React.SFC<ModalProps> = ({
 }: ModalProps) => {
   return (
     <Dialog open={showModal} onClose={onCloseModal} aria-labelledby="form-dialog-title">
-      <DialogTitle id="form-dialog-title">{title ? title : 'New Event'}</DialogTitle>
+      <DialogTitle id="form-dialog-title">
+        {mode && mode === ModalMode.EDIT ? 'Edit Event' : 'New Event'}
+      </DialogTitle>
       <DialogContent style={{ width: 300 }}>
         <Grid container spacing={1}>
           <Grid container item xs={12} spacing={3}>
@@ -54,7 +55,7 @@ const Modal: React.SFC<ModalProps> = ({
               name="activeEventTitle"
               value={title}
               onChange={(e) => {
-                handleChangeModal(e.target.value, 'activeEventTitle');
+                handleChangeModal(e.target.value.slice(0, 30), 'activeEventTitle');
               }}
             />
           </Grid>
@@ -91,19 +92,37 @@ const Modal: React.SFC<ModalProps> = ({
               id="time-picker-end"
               label="Event end"
               name="activeEventEndTime"
-              value={startTime}
+              value={endTime}
               onChange={(time) => {
-                handleChangeModal(time, 'activeEventEndTime');
+                const checkedEndTime = time && time <= startTime ? startTime : time;
+                handleChangeModal(checkedEndTime, 'activeEventEndTime');
+              }}
+            />
+          </Grid>
+          <Grid item xs={12} spacing={3} container direction="row" alignItems="center">
+            <label htmlFor="color-input" className="modal__input-label">
+              Pick event's color
+            </label>
+            <input
+              id="color-input"
+              type="color"
+              name="activeEventColor"
+              value={color}
+              onChange={(evt) => {
+                handleChangeModal(evt.target.value, 'activeEventColor');
               }}
             />
           </Grid>
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onSuccessModal} color="primary">
+        <Button onClick={onSuccess} color="primary">
           Save
         </Button>
-        <Button onClick={onCloseModal} color="primary">
+        <Button onClick={onDelete} color="secondary">
+          Delete
+        </Button>
+        <Button onClick={onCloseModal} color="default">
           Cancel
         </Button>
       </DialogActions>
